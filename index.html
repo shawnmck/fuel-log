@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fuel Log">
+<meta name="theme-color" content="#0f1117">
+<title>Fuel Log</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f2f8;
+    --muted: #7a7f9a;
+    --accent: #4f8ef7;
+    --accent-dim: rgba(79,142,247,0.15);
+    --success: #3ecf8e;
+    --success-dim: rgba(62,207,142,0.12);
+    --danger: #f26b6b;
+    --input-bg: #13151e;
+    --label: #9095b0;
+    --font: 'DM Sans', system-ui, sans-serif;
+    --mono: 'DM Mono', monospace;
+    --radius: 14px;
+    --radius-sm: 9px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100dvh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
+  .header { padding: calc(var(--safe-top) + 16px) 20px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 10; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .app-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .app-title { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+  .app-sub { font-size: 12px; color: var(--muted); }
+  .auth-btn { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border2); background: var(--surface); color: var(--text); font-family: var(--font); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+  .auth-btn:active { background: var(--surface2); }
+  .auth-btn.signed-in { border-color: rgba(62,207,142,0.3); color: var(--success); }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .setup-wrap { padding: 32px 24px; display: flex; flex-direction: column; gap: 24px; }
+  .setup-hero { text-align: center; padding: 32px 0 8px; }
+  .setup-hero .icon { font-size: 52px; margin-bottom: 16px; }
+  .setup-hero h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 8px; }
+  .setup-hero p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .setup-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .setup-card h2 { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 16px; }
+  .step-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .step-row:last-child { border-bottom: none; }
+  .step-num { width: 24px; height: 24px; min-width: 24px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .step-text { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .step-text strong { color: var(--text); font-weight: 500; }
+  .step-text a { color: var(--accent); text-decoration: none; }
+  .config-field { margin-bottom: 14px; }
+  .config-field:last-child { margin-bottom: 0; }
+  .config-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+  .config-input { width: 100%; padding: 11px 14px; background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--mono); font-size: 13px; outline: none; transition: border-color 0.15s; }
+  .config-input:focus { border-color: var(--accent); }
+  .config-input::placeholder { color: var(--muted); opacity: 0.6; }
+  .primary-btn { width: 100%; padding: 15px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font); font-size: 16px; font-weight: 600; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
+  .primary-btn:active { opacity: 0.85; transform: scale(0.98); }
+  .primary-btn:disabled { opacity: 0.4; }
+  .secondary-btn { width: 100%; padding: 14px; background: transparent; color: var(--accent); border: 1px solid rgba(79,142,247,0.3); border-radius: var(--radius); font-family: var(--font); font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+  .secondary-btn:active { background: var(--accent-dim); }
+  .form-wrap { padding: 20px 20px calc(var(--safe-bottom) + 24px); display: flex; flex-direction: column; gap: 14px; }
+  .field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 11px; font-weight: 600; color: var(--label); text-transform: uppercase; letter-spacing: 0.7px; }
+  .field input { padding: 13px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font); font-size: 16px; outline: none; transition: border-color 0.15s, background 0.15s; -webkit-appearance: none; }
+  .field input:focus { border-color: var(--accent); background: var(--surface2); }
+  .field input::placeholder { color: var(--muted); opacity: 0.5; }
+  .mpg-preview { background: var(--success-dim); border: 1px solid rgba(62,207,142,0.2); border-radius: var(--radius-sm); padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .mpg-preview .mpg-label { font-size: 12px; color: var(--success); font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; }
+  .mpg-preview .mpg-value { font-family: var(--mono); font-size: 22px; font-weight: 500; color: var(--success); }
+  .mpg-preview .mpg-value.empty { font-size: 15px; color: var(--muted); font-family: var(--font); font-weight: 400; }
+  .submit-area { padding-top: 6px; }
+  .toast { position: fixed; bottom: calc(var(--safe-bottom) + 24px); left: 50%; transform: translateX(-50%) translateY(80px); background: var(--success); color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; white-space: nowrap; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); z-index: 100; pointer-events: none; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--danger); }
+  .status-bar { font-size: 12px; color: var(--muted); padding: 10px 20px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--border); }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+  .status-dot.connected { background: var(--success); }
+  .history-section { padding: 0 20px 12px; }
+  .history-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; padding: 20px 0 12px; }
+  .history-empty { font-size: 13px; color: var(--muted); text-align: center; padding: 20px 0; }
+  .entry-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .entry-left .entry-date { font-size: 13px; font-weight: 500; }
+  .entry-left .entry-detail { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .entry-right .entry-mpg { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--success); text-align: right; }
+  .entry-right .entry-mpg-label { font-size: 10px; color: var(--muted); text-align: right; }
+  .install-banner { margin: 12px 20px 0; background: var(--accent-dim); border: 1px solid rgba(79,142,247,0.2); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 12px; color: var(--accent); line-height: 1.5; display: none; }
+  .install-banner strong { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <div class="app-icon">&#9981;</div>
+    <div>
+      <div class="app-title">Fuel Log</div>
+      <div class="app-sub">Subaru</div>
+    </div>
+  </div>
+  <button class="auth-btn" id="authBtn" onclick="handleAuth()">Sign in</button>
+</div>
+<div id="installBanner" class="install-banner">
+  <strong>Add to Home Screen</strong> for a native app feel &mdash; tap the Share button then "Add to Home Screen".
+</div>
+<div id="setupScreen" class="screen active">
+  <div class="setup-wrap">
+    <div class="setup-hero">
+      <div class="icon">&#9981;</div>
+      <h1>Fuel Log</h1>
+      <p>Log fillups directly to your Google Sheet. Quick setup, then one tap to log.</p>
+    </div>
+    <div class="setup-card">
+      <h2>One-time setup</h2>
+      <div class="step-row"><div class="step-num">1</div><div class="step-text">Go to <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> and create or select a project.</div></div>
+      <div class="step-row"><div class="step-num">2</div><div class="step-text">Enable the <strong>Google Sheets API</strong> and <strong>Google Identity Services</strong>.</div></div>
+      <div class="step-row"><div class="step-num">3</div><div class="step-text">Create an <strong>OAuth 2.0 Web Client ID</strong>. Add this page's URL as an authorized JavaScript origin.</div></div>
+      <div class="step-row"><div class="step-num">4</div><div class="step-text">Paste your Client ID below. Your Spreadsheet ID is the long string in its URL.</div></div>
+    </div>
+    <div class="setup-card">
+      <h2>Configuration</h2>
+      <div class="config-field"><div class="config-label">Google OAuth Client ID</div><input class="config-input" id="clientIdInput" type="text" placeholder="xxxxx.apps.googleusercontent.com" /></div>
+      <div class="config-field"><div class="config-label">Spreadsheet ID</div><input class="config-input" id="sheetIdInput" type="text" placeholder="1JWR46zdA1cqTG8c0_yR55z8LSuV5n76sDOrgPfS0MR0" /></div>
+      <div class="config-field"><div class="config-label">Sheet tab name</div><input class="config-input" id="sheetTabInput" type="text" placeholder="Subaru" value="Subaru" /></div>
+    </div>
+    <button class="primary-btn" onclick="saveConfig()">Save &amp; continue</button>
+  </div>
+</div>
+<div id="logScreen" class="screen">
+  <div class="status-bar"><div class="status-dot" id="statusDot"></div><span id="statusText">Not signed in</span></div>
+  <div class="form-wrap">
+    <div class="field-group">
+      <div class="field"><label>Date</label><input type="date" id="fDate" /></div>
+      <div class="field"><label>Mileage</label><input type="number" id="fMileage" inputmode="decimal" placeholder="12450" step="0.1" /></div>
+    </div>
+    <div class="field-group">
+      <div class="field"><label>Gallons</label><input type="number" id="fGallons" inputmode="decimal" placeholder="11.2" step="0.001" oninput="updateMPG()" /></div>
+      <div class="field"><label>Price / gal</label><input type="number" id="fPrice" inputmode="decimal" placeholder="3.49" step="0.001" /></div>
+    </div>
+    <div class="field full"><label>Location</label><input type="text" id="fLocation" placeholder="Shell on Main St" autocomplete="off" /></div>
+    <div class="mpg-preview"><div class="mpg-label">Est. MPG</div><div class="mpg-value empty" id="mpgDisplay">fill in mileage &amp; gallons</div></div>
+    <div class="submit-area"><button class="primary-btn" id="submitBtn" onclick="submitEntry()">Log fillup</button></div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="secondary-btn" onclick="showSetup()" style="font-size:13px;padding:11px">Settings</button>
+      <button class="secondary-btn" onclick="openSheet()" style="font-size:13px;padding:11px">Open sheet &#8599;</button>
+    </div>
+  </div>
+  <div class="history-section">
+    <div class="history-title">Recent entries</div>
+    <div id="historyList"><div class="history-empty">No entries logged yet in this session</div></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="https://accounts.google.com/gsi/client" async></script>
+<script>
+const SPREADSHEET_ID_DEFAULT = '1JWR46zdA1cqTG8c0_yR55z8LSuV5n76sDOrgPfS0MR0';
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+let accessToken = null, tokenClient = null, config = {}, sessionEntries = [], lastMileage = null;
+function loadConfig() { try { const s = localStorage.getItem('fuellog_config'); if (s) config = JSON.parse(s); } catch(e) {} return config; }
+function saveConfig() { const c = document.getElementById('clientIdInput').value.trim(), s = document.getElementById('sheetIdInput').value.trim() || SPREADSHEET_ID_DEFAULT, t = document.getElementById('sheetTabInput').value.trim() || 'Subaru'; if (!c) { showToast('Please enter your OAuth Client ID', true); return; } config = { clientId: c, sheetId: s, tab: t }; localStorage.setItem('fuellog_config', JSON.stringify(config)); initGoogleAuth(); showLogScreen(); }
+function showSetup() { document.getElementById('setupScreen').classList.add('active'); document.getElementById('logScreen').classList.remove('active'); if (config.clientId) document.getElementById('clientIdInput').value = config.clientId; if (config.sheetId) document.getElementById('sheetIdInput').value = config.sheetId; if (config.tab) document.getElementById('sheetTabInput').value = config.tab; }
+function showLogScreen() { document.getElementById('setupScreen').classList.remove('active'); document.getElementById('logScreen').classList.add('active'); setTodayDate(); }
+function setTodayDate() { const d = new Date(); document.getElementById('fDate').value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function initGoogleAuth() { if (!config.clientId || !window.google) return; tokenClient = google.accounts.oauth2.initTokenClient({ client_id: config.clientId, scope: SCOPES, callback: (r) => { if (r.error) { showToast('Auth error: ' + r.error, true); return; } accessToken = r.access_token; updateAuthUI(true); } }); }
+function handleAuth() { if (accessToken) { accessToken = null; updateAuthUI(false); return; } if (!config.clientId) { showSetup(); return; } if (!tokenClient) initGoogleAuth(); if (tokenClient) tokenClient.requestAccessToken({ prompt: '' }); }
+function updateAuthUI(on) { const b = document.getElementById('authBtn'), d = document.getElementById('statusDot'), t = document.getElementById('statusText'); if (on) { b.textContent = 'Sign out'; b.className = 'auth-btn signed-in'; d.className = 'status-dot connected'; t.textContent = 'Connected to Google Sheets'; } else { b.textContent = 'Sign in'; b.className = 'auth-btn'; d.className = 'status-dot'; t.textContent = 'Not signed in'; } }
+function updateMPG() { const m = parseFloat(document.getElementById('fMileage').value), g = parseFloat(document.getElementById('fGallons').value), el = document.getElementById('mpgDisplay'); if (!isNaN(m) && !isNaN(g) && g > 0 && lastMileage && (m - lastMileage) > 0) { el.textContent = ((m - lastMileage) / g).toFixed(1) + ' mpg'; el.className = 'mpg-value'; } else if (!isNaN(m) && !isNaN(g) && g > 0) { el.textContent = 'need previous mileage'; el.className = 'mpg-value empty'; } else { el.textContent = 'fill in mileage & gallons'; el.className = 'mpg-value empty'; } }
+document.addEventListener('DOMContentLoaded', () => { document.getElementById('fMileage').addEventListener('input', updateMPG); });
+async function submitEntry() { if (!accessToken) { showToast('Sign in first', true); handleAuth(); return; } const dv = document.getElementById('fDate').value, mil = document.getElementById('fMileage').value, gal = document.getElementById('fGallons').value, pri = document.getElementById('fPrice').value, loc = document.getElementById('fLocation').value; if (!dv || !mil) { showToast('Date and mileage are required', true); return; } const [y,m,d] = dv.split('-'); const df = parseInt(m)+'/'+parseInt(d)+'/'+y; const mn = parseFloat(mil); const diff = lastMileage ? (mn - lastMileage) : ''; const btn = document.getElementById('submitBtn'); btn.disabled = true; btn.textContent = 'Logging…'; const range = (config.tab||'Subaru')+'!A:G'; try { const res = await fetch('https://sheets.googleapis.com/v4/spreadsheets/'+config.sheetId+'/values/'+encodeURIComponent(range)+':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS', { method: 'POST', headers: { 'Authorization': 'Bearer '+accessToken, 'Content-Type': 'application/json' }, body: JSON.stringify({ values: [[df, mn, diff, parseFloat(gal)||'', pri||'', loc||'', '']] }) }); const data = await res.json(); if (data.error) throw new Error(data.error.message); lastMileage = mn; sessionEntries.unshift({ date: df, mileage: mn, gallons: parseFloat(gal)||null, diff }); renderHistory(); clearForm(); showToast('Fillup logged ✓'); } catch(e) { showToast('Error: '+e.message, true); if (e.message&&e.message.includes('401')) { accessToken = null; updateAuthUI(false); } } finally { btn.disabled = false; btn.textContent = 'Log fillup'; } }
+function clearForm() { setTodayDate(); ['fMileage','fGallons','fPrice','fLocation'].forEach(id => document.getElementById(id).value = ''); document.getElementById('mpgDisplay').textContent = 'fill in mileage & gallons'; document.getElementById('mpgDisplay').className = 'mpg-value empty'; }
+function renderHistory() { const el = document.getElementById('historyList'); if (!sessionEntries.length) { el.innerHTML = '<div class="history-empty">No entries logged yet in this session</div>'; return; } el.innerHTML = sessionEntries.slice(0,5).map(e => { const mpg = (e.diff > 0 && e.gallons) ? (e.diff/e.gallons).toFixed(1) : null; return '<div class="entry-card"><div class="entry-left"><div class="entry-date">'+e.date+'</div><div class="entry-detail">'+e.mileage.toLocaleString()+' mi'+(e.gallons?' &middot; '+e.gallons+' gal':'')+'</div></div><div class="entry-right">'+(mpg?'<div class="entry-mpg">'+mpg+'</div><div class="entry-mpg-label">mpg</div>':'<div class="entry-mpg-label" style="color:var(--muted)">&#8212;</div>')+'</div></div>'; }).join(''); }
+function openSheet() { window.open('https://docs.google.com/spreadsheets/d/'+(config.sheetId||SPREADSHEET_ID_DEFAULT), '_blank'); }
+function showToast(msg, err) { const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast'+(err?' error':'')+' show'; setTimeout(() => t.className = 'toast'+(err?' error':''), 2800); }
+window.addEventListener('load', () => { loadConfig(); if (config.clientId) { showLogScreen(); const ti = setInterval(() => { if (window.google) { initGoogleAuth(); clearInterval(ti); } }, 200); } else { document.getElementById('sheetIdInput').value = SPREADSHEET_ID_DEFAULT; } const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent); const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone; if (isIOS && !isStandalone) document.getElementById('installBanner').style.display = 'block'; });
+</script>
+</body>
+</html>
